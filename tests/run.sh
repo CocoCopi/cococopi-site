@@ -26,11 +26,16 @@ for slug in corros courierforge brothforge oremath cryoquench cryotorch glazecra
 done
 
 check "index mentions all 9 projects" \
-  bash -c '[ "$(grep -o "class=\"card card-" dist/index.html | wc -l)" = "9" ]'
+  bash -c '[ "$(grep -o "class=\"tile tile-" dist/index.html | wc -l)" = "9" ]'
 check "no external js loaded"    bash -c '! grep -q "<script" dist/index.html'
 check "sitemap has 10 urls"      bash -c '[ "$(grep -c "<loc>" dist/sitemap.xml)" = "10" ]'
 check "index links to style.css" bash -c 'grep -q "href=\"/style.css\"" dist/index.html'
 check "project page links back"  bash -c 'grep -q "href=\"/#projects\"" dist/projects/glazecraft.html'
+check "typing terminal present"  bash -c 'grep -q "tw" dist/index.html'
+check "embers generated"         bash -c '[ "$(grep -o "class=\"ember\"" dist/index.html | wc -l)" = "12" ]'
+check "marquee present"          bash -c 'grep -q "class=\"mq\"" dist/index.html'
+check "prev/next nav on pages"   bash -c 'grep -q "class=\"p-nav\"" dist/projects/corros.html'
+check "file tabs present"        bash -c '[ "$(grep -o "class=\"tab\"" dist/index.html | wc -l)" = "3" ]'
 
 echo
 if [[ "$fail" = "0" ]]; then echo "all checks passed"; else echo "some checks FAILED"; exit 1; fi
