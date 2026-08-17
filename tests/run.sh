@@ -27,7 +27,9 @@ done
 
 check "index mentions all 9 projects" \
   bash -c '[ "$(grep -o "href=\"/projects/" dist/index.html | wc -l)" = "9" ]'
-check "no external js loaded"    bash -c '! grep -q "<script" dist/index.html'
+check "no third-party scripts"    bash -c '! grep -qE "<script[^>]+src=\"https?://" dist/index.html'
+check "glaze.js runtime present"   bash -c 'grep -qE "src=.?/glaze.js.?" dist/index.html'
+check "glaze.js copied to dist"    test -f dist/glaze.js
 check "sitemap has 10 urls"      bash -c '[ "$(grep -c "<loc>" dist/sitemap.xml)" = "10" ]'
 check "index links to style.css" bash -c 'grep -q "href=\"/style.css\"" dist/index.html'
 check "project page links back"  bash -c 'grep -q "href=\"/#projects\"" dist/projects/glazecraft.html'

@@ -4,8 +4,21 @@ The cococopi website — **rendered entirely by Corros**.
 
 Every page is built with [glazecraft](https://github.com/CocoCopi/glazecraft)
 components (vendored in `vendor/glaze.cro`) and written out as static HTML by
-`site.cro` — no JavaScript, no build tools, no dependencies. The output in
-`dist/` is what Vercel serves.
+`site.cro` — the layout, copy, and design system are all rendered by Corros.
+The output in `dist/` is what Vercel serves.
+
+## The design
+
+**"Molten Editorial"** — a bespoke design system generated with Google Stitch
+(Gemini 3.1 Pro), then hand-implemented in Corros + CSS:
+
+- ink-black canvas `#0a0a0a`, warm charcoal surfaces
+- **Bodoni Moda** display serif headlines, **Space Grotesk** body, **JetBrains Mono** labels
+- one molten accent: ember `#ff6a00` → `#ffb347` gradient, used like hot metal
+- hairline rules, dotted leaders, specimen plates with stamp-on-hover
+- cursor forge glow, 3D card tilt, spark showers, letter-by-letter hero reveal,
+  rising embers, and a scrolling outlined marquee — via `public/glaze.js`,
+  a single dependency-free runtime (~5 KB). No third-party scripts.
 
 ## The projects
 
@@ -52,7 +65,8 @@ corros site.cro && npx vercel --prod
 ```
 site.cro             the whole site: data + components + build, in Corros
 vendor/glaze.cro     glazecraft, vendored (the framework that renders this site)
-public/style.css     the design — dark forge theme, responsive, zero JS
+public/style.css     the design — molten editorial theme, responsive
+public/glaze.js      the client runtime — glow, tilt, sparks, reveals (~5 KB, no deps)
 deploy/build.sh      Vercel build script
 vercel.json          Vercel config (static output, clean URLs, caching)
 tests/run.sh         build validation

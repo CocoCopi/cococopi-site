@@ -275,6 +275,7 @@ craft _tile(p, idx) {
   when idx == 0 { cls = cls + " tile-feat" }
   return el("a", { "class": cls, "href": "/projects/" + p["slug"] }, [
     _stamp_svg(),
+    el("div", { "class": "spark-container" }, []),
     el("div", { "class": "tile-top" }, [
       el("span", { "class": "tile-num" }, [str(idx + 1)]),
       el("span", { "class": "tile-icon" }, [p["icon"]])
@@ -428,12 +429,14 @@ craft _page(title, body) {
     "<link rel=\"icon\" href=\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><path d='M32 5C32 5 11 34 11 51a21 21 0 0 0 42 0C53 34 32 5 32 5Z' fill='%23d95d2b'/></svg>\">" +
     "<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">" +
     "<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>" +
-    "<link href=\"https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=JetBrains+Mono:ital,wght@0,400;0,600;1,400&display=swap\" rel=\"stylesheet\">" +
+    "<link href=\"https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap\" rel=\"stylesheet\">" +
     "<link rel=\"stylesheet\" href=\"/style.css\">" +
     "</head><body>" +
     _glaze_html_vnode(_nav()) +
+    "<div id='forge-glow'></div>" +
     _glaze_html_vnode(body) +
     _glaze_html_vnode(_footer()) +
+    "<script src='/glaze.js'></script>" +
     "</body></html>"
 }
 
@@ -465,6 +468,7 @@ craft main() {
 
   // static assets, copied in pure corros
   file_write("dist/style.css", read("public/style.css"))
+  file_write("dist/glaze.js", read("public/glaze.js"))
 
   // index
   file_write("dist/index.html", _page("cococopi — forged in corros", _index()))
