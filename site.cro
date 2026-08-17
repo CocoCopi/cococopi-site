@@ -1,12 +1,12 @@
 // site.cro — the cococopi website, rendered entirely in Corros.
 //
-// Every page is built from glazecraft components (vendored in vendor/glaze.cro)
-// and written out as static HTML by this script — no JavaScript, no build
-// tools, nothing but the language. The output lands in dist/.
+// Art direction: "the foundry specimen" — a letterpress catalog of what the
+// corros forge produces. Warm paper, big serif type, fine rules, dotted
+// leaders, and a molten foil accent. Every page is built from glazecraft
+// components (vendored in vendor/glaze.cro) and written out as static HTML
+// by this script — no JavaScript, no build tools.
 //
 //   corros site.cro          (run from the repo root)
-//
-// On Vercel, deploy/build.sh installs Corros and runs exactly this.
 
 adopt "vendor/glaze.cro"
 
@@ -69,12 +69,35 @@ forge projects = [
     "install": "curl -fsSL https://raw.githubusercontent.com/CocoCopi/crucible/main/install.sh | sh" }
 ]
 
+// --- crafted SVG marks -------------------------------------------------------------
+
+// the foundry mark: an ingot flame, line-drawn with a molten foil core
+craft _flame_svg(cls) {
+  return _glaze_raw(
+    "<svg class=\"" + cls + "\" viewBox=\"0 0 64 64\" fill=\"none\" aria-hidden=\"true\">" +
+    "<path d=\"M32 5C32 5 11 34 11 51a21 21 0 0 0 42 0C53 34 32 5 32 5Z\" stroke=\"currentColor\" stroke-width=\"2.4\"/>" +
+    "<path d=\"M32 27c0 0-10 15-10 23a10 10 0 0 0 20 0c0-8-10-23-10-23Z\" fill=\"url(#foilG)\"/>" +
+    "<defs><linearGradient id=\"foilG\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">" +
+    "<stop offset=\"0\" stop-color=\"#e8a13c\"/><stop offset=\"1\" stop-color=\"#b23a4e\"/>" +
+    "</linearGradient></defs></svg>")
+}
+
+// a circular letterpress stamp that appears on hover
+craft _stamp_svg() {
+  return _glaze_raw(
+    "<svg class=\"stamp\" viewBox=\"0 0 120 120\" aria-hidden=\"true\">" +
+    "<defs><path id=\"stampArc\" d=\"M60,60 m-46,0 a46,46 0 1,1 92,0 a46,46 0 1,1 -92,0\"/></defs>" +
+    "<text class=\"stamp-text\"><textPath href=\"#stampArc\">FORGED IN CORROS · COCOCOPI FOUNDRY ·</textPath></text>" +
+    "</svg>")
+}
+
 // --- shared components -------------------------------------------------------------
 
 craft _brand() {
   return el("a", { "class": "brand", "href": "/" }, [
-    el("span", { "class": "flame" }, ["🔥"]),
-    el("span", { "class": "brand-name" }, ["~/cococopi"])
+    _flame_svg("brand-mark"),
+    el("span", { "class": "brand-name" }, ["cococopi"]),
+    el("span", { "class": "brand-sub" }, ["foundry"])
   ])
 }
 
@@ -87,9 +110,9 @@ craft _nav() {
         el("span", {}, []), el("span", {}, []), el("span", {}, [])
       ]),
       el("nav", { "class": "nav-links" }, [
-        el("a", { "href": "/#projects" }, ["//projects"]),
-        el("a", { "href": "/#stack" }, ["//stack"]),
-        el("a", { "href": "/#about" }, ["//about"]),
+        el("a", { "href": "/#projects" }, ["01 · projects"]),
+        el("a", { "href": "/#stack" }, ["02 · stack"]),
+        el("a", { "href": "/#about" }, ["03 · why"]),
         el("a", { "class": "nav-cta", "href": "https://github.com/cococopi" }, ["fork me ↗"])
       ])
     ])
@@ -99,15 +122,16 @@ craft _nav() {
 craft _footer() {
   return el("footer", { "class": "footer" }, [
     el("div", { "class": "footer-inner" }, [
-      el("pre", { "class": "logo-ascii" }, [
-        "cococopi" + "\n" + "---------" + "\n" + "an ecosystem," + "\n" + "one language."
+      el("div", { "class": "footer-word" }, [
+        el("span", { "class": "fw-outline" }, ["cococopi"]),
+        el("span", { "class": "fw-foil" }, ["· foundry"])
       ]),
       el("p", { "class": "footer-note" }, [
         "every line of this site is forged in ",
         el("a", { "href": "https://github.com/CocoCopi/corros" }, ["corros"]),
         " — components by glazecraft, no javascript, no dependencies."
       ]),
-      el("p", { "class": "footer-cred" }, ["© 2026 cococopi · built to prove the language"])
+      el("p", { "class": "footer-cred" }, ["© 2026 cococopi · printed in corros · one language, nine specimens"])
     ])
   ])
 }
@@ -118,10 +142,32 @@ craft _tags(p) {
   return out
 }
 
-craft _install_snippet(p) {
+craft _tags_str(list) {
+  forge out = ""
+  forge i = 0
+  each t in list {
+    when i > 0 { out = out + " · " }
+    out = out + t
+    i = i + 1
+  }
+  return out
+}
+
+// dotted-leader meta row:  label ········ value
+craft _meta_row(lab, val, mono) {
+  forge cls = "meta-val"
+  when mono == true { cls = cls + " mono" }
+  return el("div", { "class": "meta-row" }, [
+    el("span", { "class": "meta-lab" }, [lab]),
+    el("span", { "class": "lead" }, []),
+    el("span", { "class": cls }, [val])
+  ])
+}
+
+craft _install_card(p) {
   return el("div", { "class": "install" }, [
     el("div", { "class": "install-head" }, [
-      el("span", { "class": "install-lab" }, ["$ one-line install"]),
+      el("span", { "class": "install-lab" }, ["fig. 2 — one-line install"]),
       el("span", { "class": "install-os" }, ["anywhere corros runs"])
     ]),
     el("pre", { "class": "install-code" }, [
@@ -131,24 +177,34 @@ craft _install_snippet(p) {
   ])
 }
 
-// --- hero: embers + typing terminal ---------------------------------------------------
+// --- plate headers ------------------------------------------------------------------
+
+// a "plate" = one chapter of the catalog: meta line + big serif title
+craft _plate_meta(no, path) {
+  return el("div", { "class": "plate-meta" }, [
+    el("span", { "class": "plate-no" }, [no]),
+    el("span", { "class": "plate-dia" }, ["◆"]),
+    el("span", { "class": "plate-path" }, [path])
+  ])
+}
+
+// --- hero (plate 00) ------------------------------------------------------------------
 
 craft _embers() {
-  forge lefts = ["8%","15%","23%","31%","40%","48%","57%","64%","72%","80%","88%","95%"]
-  forge dels  = ["0s","0.8s","1.6s","0.4s","2.1s","0.9s","1.2s","2.4s","0.3s","1.8s","0.6s","1.1s"]
-  forge durs  = ["5s","7s","6s","8s","5s","9s","6s","7s","8s","5s","6s","9s"]
-  forge sizes = ["3px","2px","4px","2px","3px","5px","2px","3px","4px","2px","3px","2px"]
+  forge lefts = ["7%","14%","22%","31%","42%","51%","60%","69%","77%","86%","93%","97%"]
+  forge dels  = ["0s","0.9s","1.7s","0.5s","2.2s","1.0s","1.3s","2.5s","0.4s","1.9s","0.7s","1.2s"]
+  forge durs  = ["5.5s","7s","6s","8.5s","5s","9s","6.5s","7.5s","8s","5.5s","6s","9.5s"]
   forge out = []
   forge i = 0
   whilst i < 12 {
-    out.shove(el("i", { "class": "ember", "style": "left:" + lefts[i] + ";animation-delay:" + dels[i] + ";animation-duration:" + durs[i] + ";width:" + sizes[i] + ";height:" + sizes[i] + ";" }, []))
+    out.shove(el("i", { "class": "ember", "style": "left:" + lefts[i] + ";animation-delay:" + dels[i] + ";animation-duration:" + durs[i] + ";" }, []))
     i = i + 1
   }
   return out
 }
 
 craft _terminal() {
-  return el("div", { "class": "term" }, [
+  return el("figure", { "class": "term" }, [
     el("div", { "class": "term-bar" }, [
       el("span", { "class": "td td-r" }, []),
       el("span", { "class": "td td-y" }, []),
@@ -161,7 +217,8 @@ craft _terminal() {
       el("span", { "class": "ln ln-i" }, ["  flame.", el("span", { "class": "fn" }, ["feed"]), "(", el("span", { "class": "ts" }, ["\"corros\""]), ")"]),
       el("span", { "class": "ln ln-i tw" }, ["  ", el("span", { "class": "fn" }, ["speak"]), "(", el("span", { "class": "ts" }, ["\"hello, corros\""]), ")", el("span", { "class": "caret" }, [])]),
       el("span", { "class": "ln" }, ["}"])
-    ])
+    ]),
+    el("figcaption", { "class": "term-cap" }, ["fig. 1 — forge.cro, the language speaking itself"])
   ])
 }
 
@@ -169,27 +226,29 @@ craft _hero() {
   return el("section", { "class": "hero" }, [
     el("div", { "class": "embers" }, _embers()),
     el("div", { "class": "hero-inner" }, [
-      el("p", { "class": "hero-kicker" }, ["// built to prove the language"]),
-      el("h1", { "class": "hero-title" }, [
-        "forged in ",
-        el("span", { "class": "grad flick" }, ["corros"])
+      el("div", { "class": "hero-cols" }, [
+        el("div", { "class": "hero-left" }, [
+          _plate_meta("plate 00 — the foundry", "est. 2026"),
+          el("p", { "class": "hero-kicker" }, ["a specimen of what one language can forge"]),
+          el("h1", { "class": "hero-title" }, [
+            "forged in ",
+            el("em", { "class": "foil" }, ["corros"])
+          ]),
+          el("p", { "class": "hero-sub" }, [
+            "corros is a scripting language written from scratch — and it now ships its own http client, html parser, numpy-style math, a deep-learning engine, a pytorch-shaped api, a react-style frontend, an express-style backend, and a local llm forge. this very page is rendered by that frontend framework."
+          ]),
+          el("div", { "class": "hero-cta" }, [
+            el("a", { "class": "btn btn-primary", "href": "/#projects" }, ["see the specimens"]),
+            el("a", { "class": "btn btn-ghost", "href": "https://github.com/cococopi" }, ["github ↗"])
+          ])
+        ]),
+        el("div", { "class": "hero-right" }, [_terminal()])
       ]),
-      el("p", { "class": "hero-sub" }, [
-        "corros is a scripting language written from scratch — and it now ships its own ",
-        "http client, html parser, numpy-style math, deep-learning engine, pytorch-shaped api, ",
-        "react-style frontend framework, express-style backend, and a local llm forge. ",
-        "this website is rendered by that frontend framework."
-      ]),
-      el("div", { "class": "hero-cta" }, [
-        el("a", { "class": "btn btn-primary", "href": "/#projects" }, ["see the projects"]),
-        el("a", { "class": "btn btn-ghost", "href": "https://github.com/cococopi" }, ["github ↗"])
-      ]),
-      _terminal(),
       el("div", { "class": "hero-stats" }, [
         el("div", { "class": "ingot" }, [el("b", {}, ["9"]), el("span", {}, ["open-source projects"])]),
-        el("div", { "class": "ingot" }, [el("b", {}, ["1"]), el("span", {}, ["language built from scratch"])]),
+        el("div", { "class": "ingot" }, [el("b", {}, ["1"]), el("span", {}, ["language from scratch"])]),
         el("div", { "class": "ingot" }, [el("b", {}, ["0"]), el("span", {}, ["third-party dependencies"])]),
-        el("div", { "class": "ingot" }, [el("b", {}, ["8.6"]), el("span", {}, ["GFLOPS matmul, on a phone"])])
+        el("div", { "class": "ingot" }, [el("b", {}, ["8.6"]), el("span", {}, ["gflops matmul, on a phone"])])
       ])
     ])
   ])
@@ -209,12 +268,13 @@ craft _marquee() {
   ])
 }
 
-// --- projects: element tiles -----------------------------------------------------------
+// --- projects (plate 01): specimen plates ----------------------------------------------
 
 craft _tile(p, idx) {
-  forge cls = "tile tile-" + p["accent"]
+  forge cls = "tile"
   when idx == 0 { cls = cls + " tile-feat" }
   return el("a", { "class": cls, "href": "/projects/" + p["slug"] }, [
+    _stamp_svg(),
     el("div", { "class": "tile-top" }, [
       el("span", { "class": "tile-num" }, [str(idx + 1)]),
       el("span", { "class": "tile-icon" }, [p["icon"]])
@@ -222,7 +282,7 @@ craft _tile(p, idx) {
     el("h3", { "class": "tile-name" }, [p["name"]]),
     el("p", { "class": "tile-tag" }, [p["tagline"]]),
     el("div", { "class": "tile-tags" }, _tags(p)),
-    el("span", { "class": "tile-go" }, ["forge it →"])
+    el("span", { "class": "tile-go" }, ["see the specimen →"])
   ])
 }
 
@@ -234,112 +294,105 @@ craft _grid() {
     i = i + 1
   }
   return el("section", { "class": "section", "id": "projects" }, [
-    el("div", { "class": "tab" }, [
-      el("span", { "class": "td td-r" }, []),
-      el("span", { "class": "td td-y" }, []),
-      el("span", { "class": "td td-g" }, []),
-      el("span", { "class": "tab-name" }, ["projects.cro"]),
-      el("span", { "class": "tab-path" }, ["~/cococopi/src"])
-    ]),
+    _plate_meta("plate 01 — the collection", "~/cococopi/src/projects.cro"),
     el("div", { "class": "section-head" }, [
-      el("h2", {}, ["the periodic table of the ecosystem"]),
-      el("p", { "class": "section-sub" }, ["nine elements, one forge — each one built from scratch in corros. hover one to heat it up."])
+      el("h2", {}, ["the collection"]),
+      el("p", { "class": "section-sub" }, ["nine specimens, one forge — each one built from scratch in corros. hover a plate to stamp it."])
     ]),
     el("div", { "class": "grid" }, tiles)
   ])
 }
 
-// --- stack: the circuit ----------------------------------------------------------------
+// --- stack (plate 02): the ledger --------------------------------------------------------
 
-craft _flow() {
-  forge nodes = [
-    { "b": "corros", "s": "the language" },
-    { "b": "glazecraft", "s": "frontend" },
-    { "b": "kilncraft", "s": "backend" },
-    { "b": "courierforge", "s": "http" },
-    { "b": "brothforge", "s": "html" },
-    { "b": "oremath", "s": "math" },
-    { "b": "cryoquench", "s": "ml engine" },
-    { "b": "cryotorch", "s": "torch api" },
-    { "b": "crucible", "s": "llm forge" }
+craft _ledger() {
+  forge rows = [
+    { "lab": "frontend", "val": "glazecraft" },
+    { "lab": "backend", "val": "kilncraft" },
+    { "lab": "http", "val": "courierforge" },
+    { "lab": "html", "val": "brothforge" },
+    { "lab": "math", "val": "oremath" },
+    { "lab": "ml engine", "val": "cryoquench" },
+    { "lab": "torch api", "val": "cryotorch" },
+    { "lab": "llm forge", "val": "crucible" },
+    { "lab": "the language", "val": "corros" }
   ]
   forge out = []
+  forge roms = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"]
   forge i = 0
-  each n in nodes {
-    when i > 0 { out.shove(el("div", { "class": "flow-link" }, [])) }
-    out.shove(el("div", { "class": "flow-node" }, [
-      el("b", {}, [n["b"]]),
-      el("span", {}, [n["s"]])
+  each r in rows {
+    out.shove(el("div", { "class": "row" }, [
+      el("span", { "class": "rom" }, [roms[i]]),
+      el("span", { "class": "lab" }, [r["lab"]]),
+      el("span", { "class": "lead" }, []),
+      el("span", { "class": "val" }, [r["val"]])
     ]))
     i = i + 1
   }
-  return out
+  return el("div", { "class": "ledger" }, out)
 }
 
 craft _stack() {
   return el("section", { "class": "section", "id": "stack" }, [
-    el("div", { "class": "tab" }, [
-      el("span", { "class": "td td-r" }, []),
-      el("span", { "class": "td td-y" }, []),
-      el("span", { "class": "td td-g" }, []),
-      el("span", { "class": "tab-name" }, ["stack.cro"]),
-      el("span", { "class": "tab-path" }, ["~/cococopi/src"])
-    ]),
+    _plate_meta("plate 02 — the ledger", "~/cococopi/src/stack.cro"),
     el("div", { "class": "section-head" }, [
-      el("h2", {}, ["the stack is one language"]),
-      el("p", { "class": "section-sub" }, ["where other ecosystems need a dozen languages, corros does it with one — every layer feeds the next, and the data never changes vocabulary."])
+      el("h2", {}, ["one language, every layer"]),
+      el("p", { "class": "section-sub" }, ["where other ecosystems need a dozen languages, corros does it with one — the table of contents of the whole ecosystem."])
     ]),
-    el("div", { "class": "flow" }, _flow())
+    _ledger()
   ])
 }
 
-// --- about: ingots -----------------------------------------------------------------------
+// --- why (plate 03) -----------------------------------------------------------------------
 
 craft _about() {
   return el("section", { "class": "section", "id": "about" }, [
-    el("div", { "class": "tab" }, [
-      el("span", { "class": "td td-r" }, []),
-      el("span", { "class": "td td-y" }, []),
-      el("span", { "class": "td td-g" }, []),
-      el("span", { "class": "tab-name" }, ["why.cro"]),
-      el("span", { "class": "tab-path" }, ["~/cococopi/src"])
-    ]),
+    _plate_meta("plate 03 — the method", "~/cococopi/src/why.cro"),
     el("div", { "class": "section-head" }, [
-      el("h2", {}, ["why"]),
-      el("p", { "class": "section-sub" }, ["the point was never just another library. it was proving that a language written from scratch can grow its own complete ecosystem — and that the ecosystem can be faster, smaller, and easier to read than the originals it replaces."])
+      el("h2", {}, ["why forge it all"]),
+      el("p", { "class": "section-sub" }, ["the point was never just another library. it was proving that a language written from scratch can grow its own complete ecosystem — faster, smaller, and easier to read than the originals it replaces."])
     ]),
     el("div", { "class": "about" }, [
-      el("div", { "class": "about-card" }, [
-        el("span", { "class": "about-k" }, ["01"]),
-        el("h3", {}, ["self-hosting"]),
+      el("div", { "class": "note" }, [
+        el("span", { "class": "note-k" }, ["note 01"]),
+        el("h3", {}, ["self-", el("em", {}, ["hosting"])]),
         el("p", {}, ["corros compiles corros: the compiler, the vm, and the aot backend are written in the language itself. the rust in the repo is only the bootstrap seed."])
       ]),
-      el("div", { "class": "about-card" }, [
-        el("span", { "class": "about-k" }, ["02"]),
-        el("h3", {}, ["from scratch"]),
+      el("div", { "class": "note" }, [
+        el("span", { "class": "note-k" }, ["note 02"]),
+        el("h3", {}, ["from ", el("em", {}, ["scratch"])]),
         el("p", {}, ["no vendored parsers, no third-party kernels, no framework-of-the-month. exp, log, softmax, html tokenizing, json, http, routing — all hand-written in corros."])
       ]),
-      el("div", { "class": "about-card" }, [
-        el("span", { "class": "about-k" }, ["03"]),
-        el("h3", {}, ["fast where it counts"]),
+      el("div", { "class": "note" }, [
+        el("span", { "class": "note-k" }, ["note 03"]),
+        el("h3", {}, ["fast where it ", el("em", {}, ["counts"])]),
         el("p", {}, ["aot compilation emits c and ties hand-written c; the cryoquench core hits 8.6 gflops on a phone. pure-corros reference implementations stay readable."])
       ])
     ])
   ])
 }
 
-// --- project detail page ----------------------------------------------------------------
+// --- project page --------------------------------------------------------------------------
 
-craft _p_hero(p) {
-  return el("section", { "class": "p-hero p-hero-" + p["accent"] }, [
+craft _p_hero(p, idx) {
+  return el("section", { "class": "p-hero" }, [
     el("div", { "class": "p-hero-inner" }, [
-      el("div", { "class": "p-icon" }, [p["icon"]]),
-      el("h1", {}, [p["name"]]),
-      el("p", { "class": "p-tagline" }, [p["tagline"]]),
-      el("div", { "class": "p-tags" }, _tags(p)),
-      el("div", { "class": "p-actions" }, [
-        el("a", { "class": "btn btn-primary", "href": p["repo"] }, ["github ↗"]),
-        el("a", { "class": "btn btn-ghost", "href": "/#projects" }, ["← all projects"])
+      _plate_meta("specimen no. " + str(idx + 1), "~/cococopi/specimens/" + p["slug"] + ".cro"),
+      el("div", { "class": "p-hero-cols" }, [
+        el("div", { "class": "p-id" }, [
+          el("div", { "class": "p-icon" }, [p["icon"]]),
+          el("h1", {}, [p["name"]]),
+          el("p", { "class": "p-tagline" }, [p["tagline"]])
+        ]),
+        el("div", { "class": "p-meta" }, [
+          _meta_row("repository", "github.com/CocoCopi/" + p["slug"], false),
+          _meta_row("tags", _tags_str(p["tags"]), false),
+          _meta_row("language", "corros", false),
+          el("div", { "class": "p-actions" }, [
+            el("a", { "class": "btn btn-primary", "href": p["repo"] }, ["github ↗"]),
+            el("a", { "class": "btn btn-ghost", "href": "/#projects" }, ["← all specimens"])
+          ])
+        ])
       ])
     ])
   ])
@@ -348,34 +401,34 @@ craft _p_hero(p) {
 craft _p_body(p, prev, next) {
   return el("section", { "class": "section p-body" }, [
     el("div", { "class": "p-desc" }, [
-      el("h2", {}, ["about"]),
+      el("h2", {}, ["about this specimen"]),
       el("p", {}, [p["desc"]])
     ]),
-    _install_snippet(p),
+    _install_card(p),
     el("div", { "class": "p-nav" }, [
       el("a", { "class": "p-nav-link", "href": "/projects/" + prev["slug"] }, [
-        el("span", {}, ["← previous"]),
+        el("span", {}, ["← previous plate"]),
         el("b", {}, [prev["name"]])
       ]),
       el("a", { "class": "p-nav-link p-nav-next", "href": "/projects/" + next["slug"] }, [
-        el("span", {}, ["next →"]),
+        el("span", {}, ["next plate →"]),
         el("b", {}, [next["name"]])
       ])
     ])
   ])
 }
 
-// --- page shell --------------------------------------------------------------------------
+// --- page shell ----------------------------------------------------------------------------
 
 craft _page(title, body) {
   return "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">" +
     "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" +
-    "<meta name=\"description\" content=\"cococopi — nine projects, one language: corros, the from-scratch scripting language and its ecosystem.\">" +
+    "<meta name=\"description\" content=\"cococopi — the foundry. nine projects, one language: corros, the from-scratch scripting language and its ecosystem.\">" +
     "<title>" + _glaze_esc(title) + "</title>" +
-    "<link rel=\"icon\" href=\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>\">" +
+    "<link rel=\"icon\" href=\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><path d='M32 5C32 5 11 34 11 51a21 21 0 0 0 42 0C53 34 32 5 32 5Z' fill='%23d95d2b'/></svg>\">" +
     "<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">" +
     "<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>" +
-    "<link href=\"https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap\" rel=\"stylesheet\">" +
+    "<link href=\"https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=JetBrains+Mono:ital,wght@0,400;0,600;1,400&display=swap\" rel=\"stylesheet\">" +
     "<link rel=\"stylesheet\" href=\"/style.css\">" +
     "</head><body>" +
     _glaze_html_vnode(_nav()) +
@@ -388,20 +441,20 @@ craft _index() {
   return el("div", {}, [_hero(), _marquee(), _grid(), _stack(), _about()])
 }
 
-craft _project_page(p, prev, next) {
-  return el("div", {}, [_p_hero(p), _p_body(p, prev, next)])
+craft _project_page(p, prev, next, idx) {
+  return el("div", {}, [_p_hero(p, idx), _p_body(p, prev, next)])
 }
 
 craft _notfound() {
   return el("div", { "class": "nf" }, [
     el("p", { "class": "nf-code" }, ["404"]),
-    el("h1", {}, ["this page was never forged"]),
-    el("p", {}, ["the foundry only fires nine projects."]),
-    el("a", { "class": "btn btn-primary", "href": "/" }, ["back to the forge"])
+    el("h1", {}, ["this page was never ", el("em", {}, ["forged"])]),
+    el("p", {}, ["the foundry only fires nine specimens."]),
+    el("a", { "class": "btn btn-primary", "href": "/" }, ["back to the foundry"])
   ])
 }
 
-// --- build ---------------------------------------------------------------------------------
+// --- build -----------------------------------------------------------------------------------
 
 craft _esc_xml(s) {
   return s.reforge("&", "&amp;").reforge("<", "&lt;").reforge(">", "&gt;")
@@ -424,7 +477,7 @@ craft main() {
     forge next = projects[0]
     when i > 0 { prev = projects[i - 1] }
     when i < n - 1 { next = projects[i + 1] }
-    file_write("dist/projects/" + p["slug"] + ".html", _page(p["name"] + " · cococopi", _project_page(p, prev, next)))
+    file_write("dist/projects/" + p["slug"] + ".html", _page(p["name"] + " · cococopi", _project_page(p, prev, next, i)))
     i = i + 1
   }
 

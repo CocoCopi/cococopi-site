@@ -26,7 +26,7 @@ for slug in corros courierforge brothforge oremath cryoquench cryotorch glazecra
 done
 
 check "index mentions all 9 projects" \
-  bash -c '[ "$(grep -o "class=\"tile tile-" dist/index.html | wc -l)" = "9" ]'
+  bash -c '[ "$(grep -o "href=\"/projects/" dist/index.html | wc -l)" = "9" ]'
 check "no external js loaded"    bash -c '! grep -q "<script" dist/index.html'
 check "sitemap has 10 urls"      bash -c '[ "$(grep -c "<loc>" dist/sitemap.xml)" = "10" ]'
 check "index links to style.css" bash -c 'grep -q "href=\"/style.css\"" dist/index.html'
@@ -35,7 +35,12 @@ check "typing terminal present"  bash -c 'grep -q "tw" dist/index.html'
 check "embers generated"         bash -c '[ "$(grep -o "class=\"ember\"" dist/index.html | wc -l)" = "12" ]'
 check "marquee present"          bash -c 'grep -q "class=\"mq\"" dist/index.html'
 check "prev/next nav on pages"   bash -c 'grep -q "class=\"p-nav\"" dist/projects/corros.html'
-check "file tabs present"        bash -c '[ "$(grep -o "class=\"tab\"" dist/index.html | wc -l)" = "3" ]'
+check "plate headers present"    bash -c '[ "$(grep -o "class=\"plate-meta\"" dist/index.html | wc -l)" = "4" ]'
+check "hover stamps rendered"    bash -c '[ "$(grep -o "class=\"stamp\"" dist/index.html | wc -l)" = "9" ]'
+check "ledger rows on index"     bash -c '[ "$(grep -o "class=\"row\"" dist/index.html | wc -l)" = "9" ]'
+check "foil accent present"      bash -c 'grep -q "class=\"foil\"" dist/index.html'
+check "svg marks rendered"       bash -c 'grep -q "<svg" dist/index.html'
+check "meta table on pages"      bash -c 'grep -q "class=\"meta-row\"" dist/projects/corros.html'
 
 echo
 if [[ "$fail" = "0" ]]; then echo "all checks passed"; else echo "some checks FAILED"; exit 1; fi
